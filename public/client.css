@@ -8,9 +8,13 @@ form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 
             margin: 0;
             padding: 0px 0px 6px 0px;
             font-size: 51px;
-            line-height: 44px
-            letter-spacing: -2px
+            line-height: 44px;
+            letter-spacing: -2px;
             font-weight: bold;  }
 #messages { list-style-type: none; margin: 0; padding: 0; }
 #messages li { padding: 5px 10px; }
 #messages li:nth-child(odd) { background: #eee; }
+#both-panels { width:100%; }
+#left-panel { float:left; width:20%; } 
+#right-panel { float:right; width:80%; }
+
