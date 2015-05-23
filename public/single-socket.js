@@ -12,12 +12,12 @@ $(document).ready(function() {
     });
 
     socket.on('word approved', function(data) {
-        $('#messages').append($('<li>').text(data.word));
+        $('#words').append($('<li>').text(data.word));
     });
 
-    socket.on('initial data', function(people) {
-        console.log(name + ' recieved people data!');
-        $.each(people, function(person, score) {
+    socket.on('initial data', function(players) {
+        console.log(name + ' recieved players data!');
+        $.each(players, function(name, score) {
             console.log('next entry = ' + person + ' : ' + score);
             $('#users').append($('<li>').text(person + ': ' + score));
         });

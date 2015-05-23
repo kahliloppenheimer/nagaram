@@ -3,20 +3,22 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var path = require('path');
-var Person = require('./person');
 
 // Mount static public assets
 app.use('/static', express.static('public/'));
 
-// Default handler just sends index page
-app.get('/', function(req, res) {
-    res.sendFile(path.join(__dirname, '/public/index.html'));
-});
+app.set('view engine', 'jade');
+app.set('views', path.join(__dirname, '/public'));
 
 // Stores all active players
-var people = {};
+var players = {};
 // Stores all correctly guessed words.
 var words = {};
+
+// Default handler just sends index page
+app.get('/', function(req, res) {
+    res.render('index', {words: words, players: players});
+});
 
 
 // Socket handlers

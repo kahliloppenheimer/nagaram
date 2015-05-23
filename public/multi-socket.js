@@ -2,8 +2,8 @@
 var socket = io();
 $(document).ready(function() {
 
-    socket.on('player entry', function(person) {
-        $('#users').append($('<li>').text(person.name + ": " + person.score));
+    socket.on('player entry', function(player) {
+        $('#users').append($('<li>').text(player.name + ": " + player.score));
     });
 
 });

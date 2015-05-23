@@ -1,0 +1,24 @@
+doctype
+html
+    script(src="/socket.io/socket.io.js")
+    script(src="http://code.jquery.com/jquery-1.11.1.js")
+    script(src="/static/single-socket.js")
+    script(src="/static/multi-socket.js")
+    head
+        title Nagaram
+        link(rel='stylesheet', href='/static/client.css')
+    body
+        h1(id="the-word" NAGARAM, align="center") NAGARAM
+        div(id="both-panels")
+        div(id="left-panel")
+            ul(id="users")
+                each user, score in players
+                    li= user + ": " + score
+        div(id="right-panel")
+            ul(id="words")
+                each 
+                    word, isThere in words
+                        li = word
+    form(id="f")
+        input(id="m", autocomplete="off")
+        button Send
