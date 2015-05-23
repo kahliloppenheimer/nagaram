@@ -13,3 +13,5 @@ Here is an example word with possible solutions.
 * pile
 * leg
 * ...
+
+Whichever player generates the most words before all words are generated (or before both players 'give up') wins!
