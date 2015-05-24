@@ -4,6 +4,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var path = require('path');
 
+var wordHelper = require('./word-helper');
 var Player = require('./player');
 var Game = require('./game');
 
@@ -17,8 +18,10 @@ app.set('views', path.join(__dirname, '/public/jade'));
 var games = {};
 // Stores all players looking for a game
 var players = [];
-// Maps player names to sockets
-var sockets = {};
+// Maps: player names -> sockets
+var playerSockets = {};
+// Maps: game_id -> socket room
+var gameSockets = {};
 
 app.get('/gametime', function(req, res) {
     console.log('query = ' + req.query);
@@ -34,7 +37,7 @@ io.on('connection', function(socket) {
 
     socket.on('login', function(name) {
         p = new Player(name);
-        sockets[name] = socket;
+        playerSockets[name] = socket;
         console.log('logging in: ' + p.toString());
         players.push(p);
         if(players.length >= Game.NUM_PLAYERS) {
@@ -43,11 +46,13 @@ io.on('connection', function(socket) {
         }
     });
 
-    socket.on('submit word', function(data) {
-        console.log(data.name + ' submitted ' + data.word);
-        if(isValid(data.word)) {
-            people[data.name]++;
-            io.emit('word approved', {word: data.word, score: people[data.name]});
+    socket.on('submit word', function(player, guessWord, game) {
+        if(isValid(guessWord)) {
+            game.incrementScore(player, game.points(guessWord));
+
+            emit('word approved', {word: data.word, score: people[data.name]});
+        } else {
+
         }
     });
 
@@ -63,10 +68,16 @@ io.on('connection', function(socket) {
 // Takes a game object and starts it up
 function startGame(game) {
     console.log('starting game with players: ' + game.players);
+    // Map game_id to a new io room
+    var gameRoom = io.of('/' + game.id);
+    gameSockets[game.id] = gameRoom;
+    // maps game id to the game
     games[game.id] = game;
     game.players.forEach(function(player) {
-        console.log('emitting start game to ' + player);
-        sockets[player.name].emit('start game', game);
+        // Adds each player in the game a socket room
+        playerSockets[player.name].join('/' + game.id);
+        // Tells each player to start the game
+        playerSockets[player.name].emit('start game', game);
     });
 }
 

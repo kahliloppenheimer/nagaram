@@ -18,25 +18,16 @@ var Game = function(players) {
 }
 
 // Number of players for any given game
-Game.NUM_PLAYERS = 1;
+Game.NUM_PLAYERS = 2;
 
-// Checks to see if the player's guessed word is valid
+// Returns true iff  player's guessed word...
+// 1) is in the dictionary
+// 2) is built out of the letters of the chosen word
+// 3) has not already been selected
 Game.prototype.guessWord = function(player, word) {
-    // If word is not in dictionary
-    if(!words.inDict(word)) {
-
-    }
-    // If word is not valid given the chosen word for this game
-    if(!words.canBuildFrom(chosenWord, word)) {
-
-    }
-    // If word has already been guessed 
-    else if(foundWords[word]) {
-    
-    }
-    else {
-        return incrementScore(player, word.length);
-    }
+    return word.inDict(word)
+            && canBuildFrom(chosenWord, word)
+            && !foundWords[word];
 }
 
 // Sets the score of a particular player to newScore.
@@ -51,6 +42,11 @@ Game.prototype.setScore = function(player, newScore) {
 Game.prototype.incrementScore = function(player, inc) {
     scores[player] += inc;
     return scores[player];
+}
+
+// Returns the points for a given word
+Game.points = function(word) {
+    return word.length;
 }
 
 

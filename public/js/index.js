@@ -1,14 +1,18 @@
-var socket = io();
+// Communication with server
+var serverSocket = io();
+// Communication with game
+var gameSocket = undefined;
 
  $("#login-button").click(function(event){
 		 event.preventDefault();
 	 
-     socket.emit('login', $('#username').val());
+     serverSocket.emit('login', $('#username').val());
 	 $('form').fadeOut(500);
 	 $('.wrapper').addClass('form-success');
 });
 
-socket.on('start game', function(game) {
-    console.log('Starting up game with players : ' + game.players + '\tid: ' + game.id);
+serverSocket.on('start game', function(game) {
+    gameSocket = io('/' + game.id);
+    console.log('Starting up game (' + game.id + ') with players : ' + game.players);
     window.location.replace('gametime?game_id=' + game.id);
 });
