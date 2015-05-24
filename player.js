@@ -4,7 +4,7 @@ var Player = function(name) {
 }
 
 Player.prototype.toString = function() {
-    return "" + this.name;
+    return JSON.stringify({name: this.name});
 }
 
 module.exports = Player;

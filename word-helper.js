@@ -1,14 +1,12 @@
 // Word helper object performs any tasks related related to the
 // validation of words for a particular game
-var wh = function(){};
-
-wh.prototype.inDict = function(word) {
+module.exports.inDict = function(word) {
     return true;
 }
 
 // Returns true iff the small word can be spelled by using
 // any subset of characters from the big word
-wh.prototype.canBuildFrom = function(bigWord, smallWord) {
+module.exports.canBuildFrom = function(bigWord, smallWord) {
     // Maps each character to how many times it appears
     chars = {};
     for(var i = 0, len = bigWord.length; i < len; ++i) {
@@ -25,4 +23,7 @@ wh.prototype.canBuildFrom = function(bigWord, smallWord) {
     }
 }
 
-this.exports = wh;
+// Returns a random word from the dictionary
+module.exports.getRandWord = function() {
+    return "nagaram";
+}

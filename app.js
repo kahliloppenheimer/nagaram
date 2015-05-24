@@ -11,26 +11,36 @@ var Game = require('./game');
 app.use('/', express.static('public/'));
 
 app.set('view engine', 'jade');
-app.set('views', path.join(__dirname, '/public'));
+app.set('views', path.join(__dirname, '/public/jade'));
 
-// Stores all active games
-var games = [];
+// Maps all game_id -> game
+var games = {};
 // Stores all players looking for a game
 var players = [];
+// Maps player names to sockets
+var sockets = {};
 
-// Default handler just sends index page
-app.get('/', function(req, res) {
-});
-
+app.get('/gametime', function(req, res) {
+    console.log('query = ' + req.query);
+    var game = games[req.query.game_id];
+    var players = game.players;
+    var foundWords = Array.prototype.slice(game.foundWords, 0);
+    console.log('players = ' + players + '\twords = ' + foundWords);
+    return res.render('main', game);
+})
 
 // Socket handlers
 io.on('connection', function(socket) {
 
     socket.on('login', function(name) {
-        console.log('name = ' + name);
         p = new Player(name);
-        console.log('logging in: ' + p);
-        players.push(new Player(name));
+        sockets[name] = socket;
+        console.log('logging in: ' + p.toString());
+        players.push(p);
+        if(players.length >= Game.NUM_PLAYERS) {
+            game = new Game(players.splice(0, 2));
+            startGame(game);
+        }
     });
 
     socket.on('submit word', function(data) {
@@ -49,6 +59,16 @@ io.on('connection', function(socket) {
     });
 
 });
+
+// Takes a game object and starts it up
+function startGame(game) {
+    console.log('starting game with players: ' + game.players);
+    games[game.id] = game;
+    game.players.forEach(function(player) {
+        console.log('emitting start game to ' + player);
+        sockets[player.name].emit('start game', game);
+    });
+}
 
 http.listen(3000, function(){
   console.log('listening on *:3000');

@@ -3,8 +3,6 @@
 var socket = io();
 $(document).ready(function() {
 
-    var name = login();
-    
     $('#f').submit(function(){
         socket.emit('submit word', {name: name, word: $('#m').val()});
         $('#m').val('');

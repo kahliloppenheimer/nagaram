@@ -1,4 +1,6 @@
-words = require('./word-helper');
+var words = require('./word-helper');
+var idHelper = require('./id-helper');
+
 // Initializes all players to start with 0 scores
 var Game = function(players) {
     // Players involved in this game
@@ -9,12 +11,14 @@ var Game = function(players) {
     this.foundWords = {};
     // Maps player -> score
     this.scores = {};
+    // Start time of game
+    this.startTime = new Date();
+    // unique id for game
+    this.id = idHelper();
 }
 
-// Starts the game
-Game.prototype.startGame = function() {
-
-}
+// Number of players for any given game
+Game.NUM_PLAYERS = 1;
 
 // Checks to see if the player's guessed word is valid
 Game.prototype.guessWord = function(player, word) {
@@ -49,10 +53,5 @@ Game.prototype.incrementScore = function(player, inc) {
     return scores[player];
 }
 
-
-// Ends the game
-Game.prototype.endGame = function() {
-    
-}
 
 module.exports = Game;
