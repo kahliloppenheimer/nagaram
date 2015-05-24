@@ -1,14 +1,14 @@
 // Word helper object performs any tasks related related to the
 // validation of words for a particular game
-function wh() = {};
+var wh = function(){};
 
-wh.prototype.inDict(word) {
+wh.prototype.inDict = function(word) {
     return true;
 }
 
 // Returns true iff the small word can be spelled by using
 // any subset of characters from the big word
-wh.prototype.canBuildFrom(bigWord, smallWord) {
+wh.prototype.canBuildFrom = function(bigWord, smallWord) {
     // Maps each character to how many times it appears
     chars = {};
     for(var i = 0, len = bigWord.length; i < len; ++i) {

@@ -8,7 +8,7 @@ var Player = require('./player');
 var Game = require('./game');
 
 // Mount static public assets
-app.use('/static', express.static('public/'));
+app.use('/', express.static('public/'));
 
 app.set('view engine', 'jade');
 app.set('views', path.join(__dirname, '/public'));
@@ -20,7 +20,6 @@ var players = [];
 
 // Default handler just sends index page
 app.get('/', function(req, res) {
-    res.render('index', {words: words, players: players});
 });
 
 
@@ -28,11 +27,10 @@ app.get('/', function(req, res) {
 io.on('connection', function(socket) {
 
     socket.on('login', function(name) {
-        people[name] = people[name] || 0;
-        // send over people data
-        console.log('sending people data to ' + name);
-        socket.emit('initial data', people);
-        io.emit('player entry', {name: name, score: people[name]});
+        console.log('name = ' + name);
+        p = new Player(name);
+        console.log('logging in: ' + p);
+        players.push(new Player(name));
     });
 
     socket.on('submit word', function(data) {
