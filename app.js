@@ -4,16 +4,19 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var path = require('path');
 
+var Player = require('./player');
+var Game = require('./game');
+
 // Mount static public assets
 app.use('/static', express.static('public/'));
 
 app.set('view engine', 'jade');
 app.set('views', path.join(__dirname, '/public'));
 
-// Stores all active players
-var players = {};
-// Stores all correctly guessed words.
-var words = {};
+// Stores all active games
+var games = [];
+// Stores all players looking for a game
+var players = [];
 
 // Default handler just sends index page
 app.get('/', function(req, res) {
@@ -48,24 +51,6 @@ io.on('connection', function(socket) {
     });
 
 });
-
-// Returns true iff the given word has:
-// 1) Not been guessed yet
-// 2) Is a valid dictionary word
-function isValid(word) {
-    if(inDict(word) && !words[word]) {
-        words[word] = true;
-        return true;
-    }
-    return false
-}
-
-// Returns true iff a word is in the dictionary
-function inDict(word) { 
-    return true;
-}
-
-
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
