@@ -36,12 +36,15 @@ app.get('/gametime', function(req, res) {
 io.on('connection', function(socket) {
 
     socket.on('login', function(name) {
-        p = new Player(name);
-        playerSockets[name] = socket;
-        console.log('logging in: ' + p.toString());
-        players.push(p);
+        // Make sure the user enters a valid name before continuing
+        if(!login(name, socket)) {
+            socket.emit('failed login', name);
+            return;
+        }
+        socket.emit('successful login', name);
+        // If there are enough players queued up, start the game
         if(players.length >= Game.NUM_PLAYERS) {
-            game = new Game(players.splice(0, 2));
+            game = new Game(players.splice(0, Game.NUM_PLAYERS));
             startGame(game);
         }
     });
@@ -49,8 +52,7 @@ io.on('connection', function(socket) {
     socket.on('submit word', function(player, guessWord, game) {
         if(isValid(guessWord)) {
             game.incrementScore(player, game.points(guessWord));
-
-            emit('word approved', {word: data.word, score: people[data.name]});
+            emit('word approved', player, guessWord, game);
         } else {
 
         }
@@ -59,11 +61,21 @@ io.on('connection', function(socket) {
     socket.on('disconnect', function() {
     });
 
-    socket.on('game over', function() {
-        people = null;
-    });
-
 });
+
+// Takes a given name and logs it into the system. Returns true if
+// the name is not taken, false otherwise.
+function login(name, socket) {
+    if(playerSockets[name]) {
+        return false;
+    } else {
+        p = new Player(name);
+        console.log('logging in: ' + p.toString());
+        playerSockets[name] = socket;
+        players.push(p);
+        return true;
+    }
+}
 
 // Takes a game object and starts it up
 function startGame(game) {

@@ -1,7 +1,9 @@
-// Handles all logic for socket communications with single clients
-
+// Handles all logic for socket communications with multiple clients
 var socket = io();
 $(document).ready(function() {
+    socket.on('player entry', function(player) {
+        $('#users').append($('<li>').text(player.name + ": " + player.score));
+    });
 
     $('#f').submit(function(){
         socket.emit('submit word', {name: name, word: $('#m').val()});
@@ -22,12 +24,3 @@ $(document).ready(function() {
     });
 
 });
-
-// Logs a user in, fires a login event to the server, then returns their name
-function login() {
-    var name = prompt("Please enter your name: ");
-    console.log('logging in ' + name);
-    socket.emit('login', name);
-    return name;
-}
-
