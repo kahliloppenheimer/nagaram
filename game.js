@@ -18,16 +18,24 @@ var Game = function(players) {
 }
 
 // Number of players for any given game
-Game.NUM_PLAYERS = 2;
+Game.NUM_PLAYERS = 1;
 
 // Returns true iff  player's guessed word...
 // 1) is in the dictionary
 // 2) is built out of the letters of the chosen word
 // 3) has not already been selected
-Game.prototype.guessWord = function(player, word) {
-    return word.inDict(word)
-            && canBuildFrom(chosenWord, word)
-            && !foundWords[word];
+//
+// calls cb with an error message if there is one
+Game.prototype.guessWord = function(word, cb) {
+    if(!word.inDict(word)) {
+        cb(word + ' is not in the dictionary.');
+    } else if(!canBuildFrom(chosenWord, word)) {
+        cb(word + ' can not be made from ' + this.chosenWord + '.');
+    } else if(foundWords[word]){
+        cb(word + ' has already been chosen.');
+    } else {
+        return true;
+    }
 }
 
 // Sets the score of a particular player to newScore.

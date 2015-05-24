@@ -35,6 +35,7 @@ app.get('/gametime', function(req, res) {
 // Socket handlers
 io.on('connection', function(socket) {
 
+    // Attempt to log user in
     socket.on('login', function(name) {
         // Make sure the user enters a valid name before continuing
         if(!login(name, socket)) {
@@ -44,18 +45,22 @@ io.on('connection', function(socket) {
         socket.emit('successful login', name);
         // If there are enough players queued up, start the game
         if(players.length >= Game.NUM_PLAYERS) {
-            game = new Game(players.splice(0, Game.NUM_PLAYERS));
+            var game = new Game(players.splice(0, Game.NUM_PLAYERS));
             startGame(game);
         }
     });
 
-    socket.on('submit word', function(player, guessWord, game) {
-        if(isValid(guessWord)) {
-            game.incrementScore(player, game.points(guessWord));
-            emit('word approved', player, guessWord, game);
-        } else {
-
-        }
+    // Check if user submitted word is valid or not
+    socket.on('submit word', function(guessWord, game) {
+        var player = game.players
+        var success = game.guessWord(guessWord, function(err) {
+            socket.emit('word rejected', err);
+        });
+        if(success) {
+            game.incrementScore(findPlayer(socket, playerSockets), game.points(guessWord));
+            // Let all players know about the approved word
+            gameSockets[game.id].emit('word approved', player, guessWord, game);
+        } 
     });
 
     socket.on('disconnect', function() {
@@ -91,6 +96,17 @@ function startGame(game) {
         // Tells each player to start the game
         playerSockets[player.name].emit('start game', game);
     });
+}
+
+// Returns the player corresponding to the socket, 
+// given a socket and a map of players -> sockets
+function findPlayer(socket, playerSockets) {
+    for (var player in playerSockets) {
+        if(playerSockets(player).id === socket.id) {
+            return player;
+        }
+    }
+    return console.error('could not find player with socket id ' + socket.id);
 }
 
 http.listen(3000, function(){

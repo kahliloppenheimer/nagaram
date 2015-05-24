@@ -1,26 +1,20 @@
-// Handles all logic for socket communications with multiple clients
 var socket = io();
 $(document).ready(function() {
-    socket.on('player entry', function(player) {
-        $('#users').append($('<li>').text(player.name + ": " + player.score));
-    });
 
     $('#f').submit(function(){
-        socket.emit('submit word', {name: name, word: $('#m').val()});
+        var guessWord = $('#m').val();
+        var player = 
+        socket.emit('submit word', player, guessWord, game);
         $('#m').val('');
         return false;
     });
 
-    socket.on('word approved', function(data) {
-        $('#words').append($('<li>').text(data.word));
+    socket.on('word approved', function(player, guessWord, game) {
+        $('#words').append($('<li>').text(guessWord));
     });
 
-    socket.on('initial data', function(players) {
-        console.log(name + ' recieved players data!');
-        $.each(players, function(name, score) {
-            console.log('next entry = ' + person + ' : ' + score);
-            $('#users').append($('<li>').text(person + ': ' + score));
-        });
+    socket.on('word rejected', function(err) {
+        alert(err);
     });
 
 });
