@@ -1,9 +1,8 @@
 doctype
 html
-    script(src="/socket.io/socket.io.js")
+    script(src="http://localhost:3000/socket.io/socket.io.js")
     script(src="http://code.jquery.com/jquery-1.11.1.js")
-    script(src="/js/single-socket.js")
-    script(src="/js/multi-socket.js")
+    script(src="/js/index.js")
     head
         title Nagaram
         link(rel='stylesheet', href='/css/main.css')
@@ -19,5 +18,5 @@ html
                 each word, wordIsThere in foundWords
                     li = word
     form(id="f")
-        input(id="m", autocomplete="off")
+        input(action="javascript:void(0);", id="m", autocomplete="off")
         button Send

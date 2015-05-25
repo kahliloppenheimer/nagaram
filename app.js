@@ -1,18 +1,23 @@
+// Express
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
+
+// Socket.io
 var io = require('socket.io')(http);
+
+// To deal with session authentication
+var session = require('express-session');
+var bodyParser = require('body-parser');
+
+// Additional npm libraries
 var path = require('path');
 
+// Local imports
 var wordHelper = require('./word-helper');
 var Player = require('./player');
 var Game = require('./game');
-
-// Mount static public assets
-app.use('/', express.static('public/'));
-
-app.set('view engine', 'jade');
-app.set('views', path.join(__dirname, '/public/jade'));
+var genKey = require('./id-helper');
 
 // Maps all game_id -> game
 var games = {};
@@ -23,9 +28,39 @@ var playerSockets = {};
 // Maps: game_id -> socket room
 var gameSockets = {};
 
+// Set up session authentication
+app.use(session({secret: genKey()}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+
+// Mount static public assets
+app.use('/', express.static('public/'));
+
+// Set up jade rendering
+app.set('view engine', 'jade');
+app.set('views', path.join(__dirname, '/public/jade'));
+
+// End point for starting a game
 app.get('/gametime', function(req, res) {
-    console.log('query = ' + req.query);
-    var game = games[req.query.game_id];
+    var sess = req.session;
+    var game_id = undefined;
+
+    // If first time, store in session
+    if(req.query.game_id) {
+        game_id = req.query.game_id;
+        sess.game_id = game_id;
+    }
+    // Otherwise, retrieve game_id from session
+    else if (req.session.game_id) {
+        game_id = sess.game_id;
+    }
+    // If neither, then we have a problem
+    else {
+        return console.error('Could not find game_id in req.query or req.session!');
+    }
+    console.log('game_id = ' + game_id);
+    console.log('games = ' + JSON.stringify(games));
+    var game = games[game_id];
     var players = game.players;
     var foundWords = Array.prototype.slice(game.foundWords, 0);
     console.log('players = ' + players + '\twords = ' + foundWords);
@@ -59,8 +94,11 @@ io.on('connection', function(socket) {
         if(success) {
             game.incrementScore(findPlayer(socket, playerSockets), game.points(guessWord));
             // Let all players know about the approved word
-            gameSockets[game.id].emit('word approved', player, guessWord, game);
-        } 
+            game.players.forEach(function(player) {
+                playerSockets[player.name].emit('word approved', player, guessword, game);
+            });
+            //gameSockets[game.id].emit('word approved', player, guessWord, game);
+        }
     });
 
     socket.on('disconnect', function() {
@@ -86,13 +124,13 @@ function login(name, socket) {
 function startGame(game) {
     console.log('starting game with players: ' + game.players);
     // Map game_id to a new io room
-    var gameRoom = io.of('/' + game.id);
-    gameSockets[game.id] = gameRoom;
+    //var gameRoom = io.of('/' + game.id);
+    //gameSockets[game.id] = gameRoom;
     // maps game id to the game
     games[game.id] = game;
     game.players.forEach(function(player) {
         // Adds each player in the game a socket room
-        playerSockets[player.name].join('/' + game.id);
+        //playerSockets[player.name].join('/' + game.id);
         // Tells each player to start the game
         playerSockets[player.name].emit('start game', game);
     });

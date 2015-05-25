@@ -22,15 +22,19 @@ $(document).ready(function() {
     });
 
     serverSocket.on('start game', function(game) {
-        gameSocket = io('/' + game.id);
+        console.log('initiating game socket');
+        //gameSocket = io('/' + game.id);
         console.log('Starting up game (' + game.id + ') with players : ' + game.players);
         //window.location.replace('gametime?game_id=' + game.id);
         loadGame(game);
     });
 });
 
-// Deals with everything after the game starts
+// Deals with everything up until the game starts
 function loadGame(game) {
+    console.log('loading game...');
+    window.location.href = '/gametime?game_id=' + game.id;
+    /*
     $.get('gametime', {"game_id": game.id},
         function(data) {
             var newDoc = document.open("text/html", "replace");
@@ -38,20 +42,25 @@ function loadGame(game) {
             newDoc.close();
             startGame(game);
         });
+    */
+    console.log('finished loading game');
 }
 
+// Deals with everything after the game starts
 function startGame(game) {
+    console.log('starting game...');
     //$(document).load('gametime?game_id=' + game.id);
     this.game = game;
     // Word submit
-    $('#f').submit(function(){
+    $('#f').submit(function(e){
+        e.preventDefault();
         var guessWord = $('#m').val();
         socket.emit('submit word', guessWord, game);
         $('#m').val('');
         return false;
     });
 
-    gameSocket.on('word approved', function(player, guessWord, game) {
+    serverSocket.on('word approved', function(player, guessWord, game) {
         $('#words').append($('<li>').text(guessWord));
     });
 

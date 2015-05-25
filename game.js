@@ -52,6 +52,10 @@ Game.prototype.incrementScore = function(player, inc) {
     return scores[player];
 }
 
+Game.prototype.toString = function() {
+    return game.id;
+}
+
 // Returns the points for a given word
 Game.points = function(word) {
     return word.length;
