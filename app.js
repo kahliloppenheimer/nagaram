@@ -7,7 +7,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 // To deal with session authentication
-var session = require('express-session');
+var session = require('cookie-session');
 var bodyParser = require('body-parser');
 
 // Additional npm libraries
@@ -24,12 +24,23 @@ var games = {};
 // Stores all players looking for a game
 var players = [];
 // Maps: player names -> sockets
-var playerSockets = {};
+var playersToSockets = {};
+// Maps socket ids -> player names
+var socketsToPlayers = {};
 // Maps: game_id -> socket room
 var gameSockets = {};
 
 // Set up session authentication
-app.use(session({secret: genKey()}));
+var sessionMiddleware = session({secret: genKey(),
+                                cookie: {maxAge: 1000*60*60}});
+// Hooks up sessions for socket.io
+// http://stackoverflow.com/questions/25532692/how-to-share-sessions-with-socket-io-1-x-and-express-4-x
+io.use(function(socket, next) {
+    sessionMiddleware(socket.request, socket.request.res, next);
+});
+// Hooks up sessions for express
+app.use(sessionMiddleware);
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -38,33 +49,22 @@ app.use('/', express.static('public/'));
 
 // Set up jade rendering
 app.set('view engine', 'jade');
-app.set('views', path.join(__dirname, '/public/jade'));
+app.set('views', path.join(__dirname, '/public'));
 
-// End point for starting a game
+// Endpoint for the actual game
 app.get('/gametime', function(req, res) {
     var sess = req.session;
-    var game_id = undefined;
+    var player_id = sess.player_id;
 
-    // If first time, store in session
-    if(req.query.game_id) {
-        game_id = req.query.game_id;
-        sess.game_id = game_id;
+    // Double check to make sure logged in
+    if(player_id) {
+        var game = playersToGames[player_id];
+        return res.render('jade/main', game);
     }
-    // Otherwise, retrieve game_id from session
-    else if (req.session.game_id) {
-        game_id = sess.game_id;
-    }
-    // If neither, then we have a problem
+    // Otherwise, redirect to login screen
     else {
-        return console.error('Could not find game_id in req.query or req.session!');
+        return res.render('index');
     }
-    console.log('game_id = ' + game_id);
-    console.log('games = ' + JSON.stringify(games));
-    var game = games[game_id];
-    var players = game.players;
-    var foundWords = Array.prototype.slice(game.foundWords, 0);
-    console.log('players = ' + players + '\twords = ' + foundWords);
-    return res.render('main', game);
 })
 
 // Socket handlers
@@ -86,16 +86,17 @@ io.on('connection', function(socket) {
     });
 
     // Check if user submitted word is valid or not
-    socket.on('submit word', function(guessWord, game) {
+    socket.on('submit word', function(guessWord, game_id) {
+        var game = games[game_id];
         var player = game.players
         var success = game.guessWord(guessWord, function(err) {
             socket.emit('word rejected', err);
         });
         if(success) {
-            game.incrementScore(findPlayer(socket, playerSockets), game.points(guessWord));
+            game.incrementScore(findPlayer(socket), game.points(guessWord));
             // Let all players know about the approved word
             game.players.forEach(function(player) {
-                playerSockets[player.name].emit('word approved', player, guessword, game);
+                game.players[player.name].emit('word approved', player, guessword, game);
             });
             //gameSockets[game.id].emit('word approved', player, guessWord, game);
         }
@@ -109,12 +110,14 @@ io.on('connection', function(socket) {
 // Takes a given name and logs it into the system. Returns true if
 // the name is not taken, false otherwise.
 function login(name, socket) {
-    if(playerSockets[name]) {
+    var sess = socket.request.session;
+    if(playersToSockets[name]) {
         return false;
     } else {
         p = new Player(name);
+        sess.player_id = p.id;
         console.log('logging in: ' + p.toString());
-        playerSockets[name] = socket;
+        playersToSockets[name] = socket;
         players.push(p);
         return true;
     }
@@ -130,21 +133,23 @@ function startGame(game) {
     games[game.id] = game;
     game.players.forEach(function(player) {
         // Adds each player in the game a socket room
-        //playerSockets[player.name].join('/' + game.id);
+        //playersToSockets[player.name].join('/' + game.id);
         // Tells each player to start the game
-        playerSockets[player.name].emit('start game', game);
+        playersToGames[player.id] = game.id;
+        playersToSockets[player.name].emit('start game', game);
     });
 }
 
 // Returns the player corresponding to the socket, 
 // given a socket and a map of players -> sockets
-function findPlayer(socket, playerSockets) {
-    for (var player in playerSockets) {
-        if(playerSockets(player).id === socket.id) {
-            return player;
-        }
+function findPlayer(socket) {
+    console.log('socket id = ' + socket.id);
+    console.log('socketsToPlayers = ' + JSON.stringify(socketsToPlayers));
+    if(socketsToPlayers[socket.id]) {
+        return socketsToPlayers[socket.id];
+    } else {
+        return console.error('could not find player with socket id ' + socket.id);
     }
-    return console.error('could not find player with socket id ' + socket.id);
 }
 
 http.listen(3000, function(){
