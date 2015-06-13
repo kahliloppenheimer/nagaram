@@ -20,7 +20,6 @@ $(document).ready(function() {
     });
 
     serverSocket.on('start game', function(game) {
-        console.log('initiating game socket');
         //gameSocket = io('/' + game.id);
         console.log('Starting up game (' + game.id + ') with players : ' + game.players);
         window.location.href = '/gametime?game_id=' + game.id;

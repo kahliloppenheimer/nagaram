@@ -10,17 +10,19 @@ module.exports.canBuildFrom = function(bigWord, smallWord) {
     // Maps each character to how many times it appears
     chars = {};
     for(var i = 0, len = bigWord.length; i < len; ++i) {
-        nextChar = bigWord[i];
+        var nextChar = bigWord[i];
         chars[nextChar] = (chars[nextChar] + 1) || 1;
     }
+    console.log('chars = ' + JSON.stringify(chars));
     // Checks to see if smallWord matches
     for(var i = 0, len = smallWord.length; i < len; ++i) {
-        nextChar = smallWord[i];
-        if(!chars[nextChar] || chars[nextChar] === 0) {
+        var nextChar = smallWord[i];
+        if(!chars[nextChar]) {
             return false;
         }
         --chars[nextChar];
     }
+    return true;
 }
 
 // Returns a random word from the dictionary

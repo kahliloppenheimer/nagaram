@@ -11,7 +11,7 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 
 // To deal with session authentication
-var session = require('express-session');
+var session = require('cookie-session');
 var bodyParser = require('body-parser');
 
 // Additional npm libraries
@@ -30,19 +30,38 @@ var players = {};
 // Stores all players queued for a game
 var queued_players = [];
 // Maps: player names -> sockets
-var playerSockets = {};
+var playersToSockets = {};
+// Maps socket ids -> player names
+var socketsToPlayers = {};
 // Maps: game_id -> socket room
 var gameSockets = {};
 
+<<<<<<< HEAD
 // Set up jade rendering
 app.set('view engine', 'jade');
 app.set('views', path.join(__dirname, '/public/jade'));
 
 setUpSessionAuth(app, io);
+=======
+// Set up session authentication
+var sessionMiddleware = session({secret: genKey(),
+                                cookie: {maxAge: 1000*60*60}});
+// Hooks up sessions for socket.io
+// http://stackoverflow.com/questions/25532692/how-to-share-sessions-with-socket-io-1-x-and-express-4-x
+io.use(function(socket, next) {
+    sessionMiddleware(socket.request, socket.request.res, next);
+});
+// Hooks up sessions for express
+app.use(sessionMiddleware);
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+>>>>>>> b4436218301a9853cb5fa5003d289831aa825f84
 
 // Mount static public assets
 app.use('/', express.static('public/'));
 
+<<<<<<< HEAD
 // Setup passport authentication
 app.use(passport.initialize());
 app.use(passport.session());
@@ -108,29 +127,36 @@ app.post('/login', function(req, res) {
 }); */
 
 // When user starts game
+=======
+// Set up jade rendering
+app.set('view engine', 'jade');
+app.set('views', path.join(__dirname, '/public'));
+
+// Endpoint for the actual game
+>>>>>>> b4436218301a9853cb5fa5003d289831aa825f84
 app.get('/gametime', function(req, res) {
     var sess = req.session;
-    var game_id = undefined;
+    var player_id = sess.player_id;
 
-    // If first time, store in session
-    if(req.query.game_id) {
-        game_id = req.query.game_id;
-        sess.game_id = game_id;
+    // Double check to make sure logged in
+    if(player_id) {
+        var game = playersToGames[player_id];
+        return res.render('jade/main', game);
     }
-    // Otherwise, retrieve game_id from session
-    else if (req.session.game_id) {
-        game_id = sess.game_id;
-    }
-    // If neither, then we have a problem
+    // Otherwise, redirect to login screen
     else {
-        return console.error('Could not find game_id in req.query or req.session!');
+        return res.render('index');
     }
+<<<<<<< HEAD
     var game = games[game_id];
     var players = game.players;
     var foundWords = Array.prototype.slice(game.foundWords, 0);
     console.log('players = ' + players + '\twords = ' + foundWords);
     return res.render('main', game);
 });
+=======
+})
+>>>>>>> b4436218301a9853cb5fa5003d289831aa825f84
 
 // Socket handlers
 io.on('connection', function(socket) {
@@ -197,21 +223,23 @@ function startGame(game) {
     games[game.id] = game;
     game.players.forEach(function(player) {
         // Adds each player in the game a socket room
-        //playerSockets[player.name].join('/' + game.id);
+        //playersToSockets[player.name].join('/' + game.id);
         // Tells each player to start the game
-        playerSockets[player.name].emit('start game', game);
+        playersToGames[player.id] = game.id;
+        playersToSockets[player.name].emit('start game', game);
     });
 }
 
 // Returns the player corresponding to the socket, 
 // given a socket and a map of players -> sockets
-function findPlayer(socket, playerSockets) {
-    for (var player in playerSockets) {
-        if(playerSockets(player).id === socket.id) {
-            return player;
-        }
+function findPlayer(socket) {
+    console.log('socket id = ' + socket.id);
+    console.log('socketsToPlayers = ' + JSON.stringify(socketsToPlayers));
+    if(socketsToPlayers[socket.id]) {
+        return socketsToPlayers[socket.id];
+    } else {
+        return console.error('could not find player with socket id ' + socket.id);
     }
-    return console.error('could not find player with socket id ' + socket.id);
 }
 
 http.listen(3000, function(){

@@ -27,11 +27,11 @@ Game.NUM_PLAYERS = 1;
 //
 // calls cb with an error message if there is one
 Game.prototype.guessWord = function(word, cb) {
-    if(!word.inDict(word)) {
+    if(!words.inDict(word)) {
         cb(word + ' is not in the dictionary.');
-    } else if(!canBuildFrom(chosenWord, word)) {
+    } else if(!words.canBuildFrom(this.chosenWord, word)) {
         cb(word + ' can not be made from ' + this.chosenWord + '.');
-    } else if(foundWords[word]){
+    } else if(this.foundWords[word]){
         cb(word + ' has already been chosen.');
     } else {
         return true;
@@ -41,19 +41,19 @@ Game.prototype.guessWord = function(word, cb) {
 // Sets the score of a particular player to newScore.
 // Returns the new score.
 Game.prototype.setScore = function(player, newScore) {
-    scores[player] = newScore;
-    return scores[player];
+    this.scores[player] = newScore;
+    return this.scores[player];
 }
 
 // Increments the score of a particular player by inc.
 // Returns the new score.
 Game.prototype.incrementScore = function(player, inc) {
-    scores[player] += inc;
-    return scores[player];
+    this.scores[player] += inc;
+    return this.scores[player];
 }
 
 Game.prototype.toString = function() {
-    return game.id;
+    return this.id;
 }
 
 // Returns the points for a given word
