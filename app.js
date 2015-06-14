@@ -36,32 +36,14 @@ var socketsToPlayers = {};
 // Maps: game_id -> socket room
 var gameSockets = {};
 
-<<<<<<< HEAD
 // Set up jade rendering
 app.set('view engine', 'jade');
 app.set('views', path.join(__dirname, '/public/jade'));
 
 setUpSessionAuth(app, io);
-=======
-// Set up session authentication
-var sessionMiddleware = session({secret: genKey(),
-                                cookie: {maxAge: 1000*60*60}});
-// Hooks up sessions for socket.io
-// http://stackoverflow.com/questions/25532692/how-to-share-sessions-with-socket-io-1-x-and-express-4-x
-io.use(function(socket, next) {
-    sessionMiddleware(socket.request, socket.request.res, next);
-});
-// Hooks up sessions for express
-app.use(sessionMiddleware);
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
->>>>>>> b4436218301a9853cb5fa5003d289831aa825f84
-
 // Mount static public assets
 app.use('/', express.static('public/'));
 
-<<<<<<< HEAD
 // Setup passport authentication
 app.use(passport.initialize());
 app.use(passport.session());
@@ -89,17 +71,18 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
     user = players[id];
-    return user ? done(null, user) : done('User not found!');
+    return user ? done(null, user) : done(id + ' not found!');
 });
 
-
-app.post('/login', passport.authenticate('local', { successRedirect: '/waitingroom',
-                                                    failureRedirect: '/', }));
+app.post('/login',
+        passport.authenticate('local', { successRedirect: '/waitingroom',
+                                         failureRedirect: '/' }));
+                                                 
 app.get('/waitingroom', function(req, res) {
     var player = req.user;
     console.log(player + ' has entered the waiting room!');
     queued_players.push(player);
-    return res.render("<h1>Waiting Room</h1>");
+    return res.render("waiting-room");
 });
 
 /*
@@ -127,40 +110,30 @@ app.post('/login', function(req, res) {
 }); */
 
 // When user starts game
-=======
-// Set up jade rendering
-app.set('view engine', 'jade');
-app.set('views', path.join(__dirname, '/public'));
-
-// Endpoint for the actual game
->>>>>>> b4436218301a9853cb5fa5003d289831aa825f84
 app.get('/gametime', function(req, res) {
-    var sess = req.session;
-    var player_id = sess.player_id;
-
-    // Double check to make sure logged in
-    if(player_id) {
-        var game = playersToGames[player_id];
-        return res.render('jade/main', game);
-    }
-    // Otherwise, redirect to login screen
-    else {
-        return res.render('index');
-    }
-<<<<<<< HEAD
+    var player = req.user;
     var game = games[game_id];
     var players = game.players;
     var foundWords = Array.prototype.slice(game.foundWords, 0);
     console.log('players = ' + players + '\twords = ' + foundWords);
     return res.render('main', game);
 });
-=======
-})
->>>>>>> b4436218301a9853cb5fa5003d289831aa825f84
+
+// Waiting room socket handlers
+var nsp = io.of('/waiting-room');
+nsp.on('connection', function(socket) {
+    console.log('made it into waiting-room socket connection!');
+    if(false) {
+    if(queued_players.length >= Game.NUM_PLAYERS) {
+        var game = new Game(queued_players.splice(0, Game.NUM_PLAYERS));
+        startGame(game);
+    }
+    }
+});
 
 // Socket handlers
 io.on('connection', function(socket) {
-
+    console.log('made it into general socket connection!');
     // Attempt to log user in
     socket.on('login', function(name) {
     });
@@ -178,7 +151,6 @@ io.on('connection', function(socket) {
             });
             if(success) {
                 game.incrementscore(findplayer(socket, playersockets), game.points(guessword));
-                return res.render("<h1>Waiting Room</h1>");
                 // let all players know about the approved word
                 game.players.foreach(function(player) {
                     playersockets[player.name].emit('word approved', player, guessword, game);

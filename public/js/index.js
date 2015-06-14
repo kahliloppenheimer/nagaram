@@ -11,7 +11,7 @@ $(document).ready(function() {
     var form = $('#entry-form');
 
     serverSocket.on('failed login', function(name) {
-        alert(name + ' is already taken. Please choose a new name.');
+        alert('Invalid username or password.');
     });
 
     serverSocket.on('successful login', function(name) {

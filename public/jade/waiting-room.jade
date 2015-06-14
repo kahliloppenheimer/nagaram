@@ -1,22 +1,11 @@
 doctype
 html
-    script(src="http://localhost:3000/socket.io/socket.io.js")
+    script(src="/socket.io/socket.io.js")
     script(src="http://code.jquery.com/jquery-1.11.1.js")
-    script(src="/js/main.js")
+    script(src="/js/waiting-room.js")
     head
         title Nagaram
-        link(rel='stylesheet', href='/css/main.css')
+        link(rel='stylesheet', href='/css/waiting-room.css')
     body
-        h1(id="the-word" NAGARAM, align="center") NAGARAM
-        div(id="both-panels")
-        div(id="left-panel")
-            ul(id="players")
-                each player in players
-                    li= player
-        div(id="right-panel")
-            ul(id="words")
-                each word, wordIsThere in foundWords
-                    li = word
-    form(id="f")
-        input(id="m", autocomplete="off")
-        button Send
+        h1(align="center") Finding players to match you up against!
+        div(class="modal")
